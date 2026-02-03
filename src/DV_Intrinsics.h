@@ -80,11 +80,11 @@ ATan2(real32 Y, real32 X)
     return(Result);
 }
 
-struct bit_scan_result
+typedef struct bit_scan_result
 {
 	bool32 Found;
 	uint32 Index;
-};
+}bit_scan_result;
 
 inline bit_scan_result FindLeastSignificantBit(uint32 Value)
 {

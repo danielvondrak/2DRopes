@@ -30,8 +30,8 @@
 #include "Win32App.h"
 
 //globals
-global_variable bool GlobalRunning;
-global_variable bool GlobalPause;
+global_variable bool32 GlobalRunning;
+global_variable bool32 GlobalPause;
 global_variable win32_offscreen_buffer GlobalBackBuffer;
 global_variable LPDIRECTSOUNDBUFFER GlobalSecondaryBuffer;
 global_variable int64 GlobalPerfCountFrequency;
@@ -157,7 +157,7 @@ DEBUG_PLATFORM_READ_ENTIRE_FILE(DEBUGPlatformReadEntireFile)
 
 DEBUG_PLATFORM_WRITE_ENTIRE_FILE(DEBUGPlatformWriteEntireFile)
 {
-  bool32 Result = false;
+  bool32 Result = 0;
 
   HANDLE FileHandle = CreateFileA(Filename, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
   if (FileHandle != INVALID_HANDLE_VALUE)
@@ -199,7 +199,7 @@ internal win32_game_code Win32LoadGameCode(char *SourceDLLName, char *TempDLLNam
   if (!GetFileAttributesEx(LockFileName, GetFileExInfoStandard, &Ignored))
   {
     Result.DLLLastWriteTime = Win32GetLastWriteTime(SourceDLLName);
-    CopyFile(SourceDLLName, TempDLLName, false);
+    CopyFile(SourceDLLName, TempDLLName, 0);
 
     Result.GameCodeDLL = LoadLibraryA(TempDLLName);
     if (Result.GameCodeDLL)
@@ -226,7 +226,7 @@ internal void Win32UnloadGameCode(win32_game_code *GameCode) {
 		FreeLibrary(GameCode->GameCodeDLL);
 		GameCode->GameCodeDLL = 0;
 	}
-	GameCode->IsValid = false;
+	GameCode->IsValid = 0;
 	GameCode->GetSoundSamples = 0;
 	GameCode->UpdateAndRender = 0;
 }
@@ -286,15 +286,15 @@ internal void Win32InitDSound(HWND Window, int32 BufferSize, int32 SamplesPerSec
       WaveFormat.nBlockAlign = (WaveFormat.nChannels * WaveFormat.wBitsPerSample) / 8;
       WaveFormat.nAvgBytesPerSec = WaveFormat.nSamplesPerSec * WaveFormat.nBlockAlign;
 
-      if (SUCCEEDED(DirectSound->SetCooperativeLevel(Window, DSSCL_PRIORITY)))
+      if (SUCCEEDED(DirectSound->lpVtbl->SetCooperativeLevel(DirectSound, Window, DSSCL_PRIORITY)))
       {
         DSBUFFERDESC BufferDesc = {}; // sets values to zero somehow...
         BufferDesc.dwSize = sizeof(BufferDesc);
         BufferDesc.dwFlags = DSBCAPS_PRIMARYBUFFER;
         LPDIRECTSOUNDBUFFER PrimaryBuffer;
-        if (SUCCEEDED(DirectSound->CreateSoundBuffer(&BufferDesc, &PrimaryBuffer, NULL)))
+        if (SUCCEEDED(DirectSound->lpVtbl->CreateSoundBuffer(DirectSound, &BufferDesc, &PrimaryBuffer, NULL)))
         {
-          if (SUCCEEDED(PrimaryBuffer->SetFormat(&WaveFormat)))
+          if (SUCCEEDED(PrimaryBuffer->lpVtbl->SetFormat(PrimaryBuffer, &WaveFormat)))
           {
             // SUCCESSFULLY Created primary buffer
             printf("succesful primary buffer!\n");
@@ -316,7 +316,7 @@ internal void Win32InitDSound(HWND Window, int32 BufferSize, int32 SamplesPerSec
       BufferDesc.dwFlags = DSBCAPS_GETCURRENTPOSITION2;
       BufferDesc.dwBufferBytes = BufferSize;
       BufferDesc.lpwfxFormat = &WaveFormat;
-      HRESULT error = DirectSound->CreateSoundBuffer(&BufferDesc, &GlobalSecondaryBuffer, NULL);
+      HRESULT error = DirectSound->lpVtbl->CreateSoundBuffer(DirectSound, &BufferDesc, &GlobalSecondaryBuffer, NULL);
       if (SUCCEEDED(error))
       {
         printf("Successful Secondary buffer\n");
@@ -457,12 +457,12 @@ LRESULT CALLBACK MainWindowCallback(HWND window, UINT message, WPARAM wParam, LP
       break;
     case WM_DESTROY:
       {
-        GlobalRunning = false;
+        GlobalRunning = 0;
       }
       break;
     case WM_CLOSE:
       {
-        GlobalRunning = false;
+        GlobalRunning = 0;
       }
       break;
     case WM_ACTIVATEAPP:
@@ -492,7 +492,7 @@ internal void Win32ClearSoundBuffer(win32_sound_output *SoundOutput) {
   DWORD Region1Size;
   VOID *Region2;
   DWORD Region2Size;
-  if (SUCCEEDED(GlobalSecondaryBuffer->Lock(0, SoundOutput->SecondaryBufferSize, &Region1, &Region1Size, &Region2, &Region2Size, 0)))
+  if (SUCCEEDED(GlobalSecondaryBuffer->lpVtbl->Lock(GlobalSecondaryBuffer, 0, SoundOutput->SecondaryBufferSize, &Region1, &Region1Size, &Region2, &Region2Size, 0)))
   {
     uint8 *DestSample = (uint8 *)Region1;
     for (DWORD SampleIndex = 0; SampleIndex < Region1Size; ++SampleIndex)
@@ -504,7 +504,7 @@ internal void Win32ClearSoundBuffer(win32_sound_output *SoundOutput) {
     {
       *DestSample++ = 0;
     }
-    GlobalSecondaryBuffer->Unlock(Region1, Region1Size, Region2, Region2Size);
+    GlobalSecondaryBuffer->lpVtbl->Unlock(GlobalSecondaryBuffer, Region1, Region1Size, Region2, Region2Size);
   }
 }
 
@@ -515,7 +515,7 @@ internal void Win32FillSoundBuffer(win32_sound_output *SoundOutput, DWORD ByteTo
   DWORD Region1Size;
   VOID *Region2;
   DWORD Region2Size;
-  if (SUCCEEDED(GlobalSecondaryBuffer->Lock(ByteToLock, BytesToWrite, &Region1, &Region1Size, &Region2, &Region2Size, 0)))
+  if (SUCCEEDED(GlobalSecondaryBuffer->lpVtbl->Lock(GlobalSecondaryBuffer, ByteToLock, BytesToWrite, &Region1, &Region1Size, &Region2, &Region2Size, 0)))
   {
     DWORD Region1SampleCount = Region1Size / SoundOutput->BytesPerSample;
     int16 *DestSample = (int16 *)Region1;
@@ -534,7 +534,7 @@ internal void Win32FillSoundBuffer(win32_sound_output *SoundOutput, DWORD ByteTo
       *DestSample++ = *SourceSample++;
       ++SoundOutput->RunningSampleIndex;
     }
-    GlobalSecondaryBuffer->Unlock(Region1, Region1Size, Region2, Region2Size);
+    GlobalSecondaryBuffer->lpVtbl->Unlock(GlobalSecondaryBuffer, Region1, Region1Size, Region2, Region2Size);
   } else
   {
     // TODO: Error Handle Lock
@@ -587,7 +587,7 @@ internal void Win32BeginRecordingInput(win32_state *Win32State, int InputRecordi
     Win32State->InputRecordingIndex = InputRecordingIndex;
 
 	char Filename[WIN32_STATE_FILE_NAME_COUNT];
-	Win32GetInputFileLocation(Win32State, true, InputRecordingIndex, sizeof(Filename), Filename);
+	Win32GetInputFileLocation(Win32State, 1, InputRecordingIndex, sizeof(Filename), Filename);
     Win32State->RecordingHandle = CreateFileA(Filename, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
 
     // LARGE_INTEGER FilePosition;
@@ -610,7 +610,7 @@ internal void Win32BeginInputPlayback(win32_state *Win32State, int InputPlayingI
   {
     Win32State->InputPlayingIndex = InputPlayingIndex;
 	char Filename[WIN32_STATE_FILE_NAME_COUNT];
-	Win32GetInputFileLocation(Win32State, true, InputPlayingIndex, sizeof(Filename), Filename);
+	Win32GetInputFileLocation(Win32State, 1, InputPlayingIndex, sizeof(Filename), Filename);
     Win32State->PlaybackHandle = CreateFileA(Filename, GENERIC_READ, 0, 0, OPEN_EXISTING, 0, 0);
 
     // LARGE_INTEGER FilePosition;
@@ -686,7 +686,7 @@ internal void Win32ProcessPendingMessages(win32_state *Win32State, game_controll
     {
       case WM_QUIT:
         {
-          GlobalRunning = false;
+          GlobalRunning = 0;
         }
         break;
 
@@ -772,7 +772,7 @@ internal void Win32ProcessPendingMessages(win32_state *Win32State, game_controll
               bool32 AltKeyWasDown = (Message.lParam & (1 << 29));
               if ((VKCode == VK_F4) && AltKeyWasDown)
               {
-                GlobalRunning = false;
+                GlobalRunning = 0;
               }
               if ((VKCode == VK_RETURN) && AltKeyWasDown)
               {
@@ -940,7 +940,7 @@ int WINAPI WinMain(HINSTANCE hInstance,     // handle to an instance. Unique ID 
   Win32ResizeDIBSection(&GlobalBackBuffer, 960, 540);
 
 #if INTERNAL
-	DEBUGGlobalShowCursor = true;
+	DEBUGGlobalShowCursor = 1;
 #endif
   // Win32 Window Class info
   WNDCLASS windowClass = {};
@@ -997,7 +997,7 @@ int WINAPI WinMain(HINSTANCE hInstance,     // handle to an instance. Unique ID 
   // Loop Variables
   Win32State.InputRecordingIndex = 0;
   Win32State.InputPlayingIndex = 0;
-  GlobalRunning = true;
+  GlobalRunning = 1;
   int XOffset = 0;
   int YOffset = 0;
 
@@ -1010,7 +1010,7 @@ int WINAPI WinMain(HINSTANCE hInstance,     // handle to an instance. Unique ID 
   SoundOutput.SafetyBytes = (int)((real32)(SoundOutput.SamplesPerSecond * (real32)SoundOutput.BytesPerSample) / (real32)GameUpdateHz / 3.0f);
   Win32InitDSound(WindowHandle, SoundOutput.SecondaryBufferSize, SoundOutput.SamplesPerSecond);
   Win32ClearSoundBuffer(&SoundOutput);
-  GlobalSecondaryBuffer->Play(0, 0, DSBPLAY_LOOPING);
+  GlobalSecondaryBuffer->lpVtbl->Play(GlobalSecondaryBuffer, 0, 0, DSBPLAY_LOOPING);
 
 #if 0
             // NOTE: This tests the PlayCursor/WriteCursor update frequency
@@ -1057,7 +1057,7 @@ int WINAPI WinMain(HINSTANCE hInstance,     // handle to an instance. Unique ID 
   {
     win32_replay_buffer *ReplayBuffer = &Win32State.ReplayBuffers[ReplayIndex];
 	
-    Win32GetInputFileLocation(&Win32State, false, ReplayIndex, sizeof(ReplayBuffer->Filename), ReplayBuffer->Filename);
+    Win32GetInputFileLocation(&Win32State, 0, ReplayIndex, sizeof(ReplayBuffer->Filename), ReplayBuffer->Filename);
 
     ReplayBuffer->FileHandle = CreateFileA(ReplayBuffer->Filename, GENERIC_READ | GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
 
@@ -1087,7 +1087,7 @@ int WINAPI WinMain(HINSTANCE hInstance,     // handle to an instance. Unique ID 
   //used for debuggin audio
   int DebugTimeMarkerIndex = 0;
   win32_debug_time_marker DebugTimeMarkers[30] = {0};
-  bool32 SoundIsValid = false;
+  bool32 SoundIsValid = 0;
 
   DWORD AudioLatencyBytes = 0;
   real32 AudioLatencySeconds = 0;
@@ -1115,8 +1115,8 @@ int WINAPI WinMain(HINSTANCE hInstance,     // handle to an instance. Unique ID 
 	NewInput->dtForFrame = TargetSecondsPerFrame;
     game_controller_input *OldKeyboardController = GetController(OldInput, 0);
     game_controller_input *NewKeyboardController = GetController(NewInput, 0);
-    *NewKeyboardController = {};
-    NewKeyboardController->IsConnected = true;
+    *NewKeyboardController = (struct game_controller_input){0};
+    NewKeyboardController->IsConnected = 1;
     for (int ButtonIndex = 0; ButtonIndex < ArrayCount(NewKeyboardController->Buttons); ++ButtonIndex)
     {
       NewKeyboardController->Buttons[ButtonIndex].EndedDown = OldKeyboardController->Buttons[ButtonIndex].EndedDown;
@@ -1154,7 +1154,7 @@ int WINAPI WinMain(HINSTANCE hInstance,     // handle to an instance. Unique ID 
         XINPUT_STATE ControllerState;
         if (XInputGetState(ControllerIndex, &ControllerState) == ERROR_SUCCESS)
         {
-          NewController->IsConnected = true;
+          NewController->IsConnected = 1;
 		  NewController->IsAnalog = OldController->IsAnalog;
 
           // NOTE(casey): This controller is plugged in
@@ -1168,31 +1168,31 @@ int WINAPI WinMain(HINSTANCE hInstance,     // handle to an instance. Unique ID 
           NewController->StickAverageY = Win32ProcessXInputStickValue(Pad->sThumbLY, XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE);
           if ((NewController->StickAverageX != 0.0f) || (NewController->StickAverageY != 0.0f))
           {
-            NewController->IsAnalog = true;
+            NewController->IsAnalog = 1;
           }
 
           if (Pad->wButtons & XINPUT_GAMEPAD_DPAD_UP)
           {
             NewController->StickAverageY = 1.0f;
-            NewController->IsAnalog = false;
+            NewController->IsAnalog = 0;
           }
 
           if (Pad->wButtons & XINPUT_GAMEPAD_DPAD_DOWN)
           {
             NewController->StickAverageY = -1.0f;
-            NewController->IsAnalog = false;
+            NewController->IsAnalog = 0;
           }
 
           if (Pad->wButtons & XINPUT_GAMEPAD_DPAD_LEFT)
           {
             NewController->StickAverageX = -1.0f;
-            NewController->IsAnalog = false;
+            NewController->IsAnalog = 0;
           }
 
           if (Pad->wButtons & XINPUT_GAMEPAD_DPAD_RIGHT)
           {
             NewController->StickAverageX = 1.0f;
-            NewController->IsAnalog = false;
+            NewController->IsAnalog = 0;
           }
 
           real32 Threshold = 0.5f;
@@ -1213,7 +1213,7 @@ int WINAPI WinMain(HINSTANCE hInstance,     // handle to an instance. Unique ID 
         } else
         {
           // NOTE(casey): The controller is not available
-          NewController->IsConnected = false;
+          NewController->IsConnected = 0;
         }
       }
 
@@ -1252,7 +1252,7 @@ int WINAPI WinMain(HINSTANCE hInstance,     // handle to an instance. Unique ID 
 
       DWORD PlayCursor;
       DWORD WriteCursor;
-      if (GlobalSecondaryBuffer->GetCurrentPosition(&PlayCursor, &WriteCursor) == DS_OK)
+      if (GlobalSecondaryBuffer->lpVtbl->GetCurrentPosition(GlobalSecondaryBuffer, &PlayCursor, &WriteCursor) == DS_OK)
       {
         /* NOTE(casey):
 
@@ -1283,7 +1283,7 @@ int WINAPI WinMain(HINSTANCE hInstance,     // handle to an instance. Unique ID 
         if (!SoundIsValid)
         {
           SoundOutput.RunningSampleIndex = WriteCursor / SoundOutput.BytesPerSample;
-          SoundIsValid = true;
+          SoundIsValid = 1;
         }
 
         DWORD ByteToLock = ((SoundOutput.RunningSampleIndex * SoundOutput.BytesPerSample) % SoundOutput.SecondaryBufferSize);
@@ -1362,7 +1362,7 @@ int WINAPI WinMain(HINSTANCE hInstance,     // handle to an instance. Unique ID 
         Win32FillSoundBuffer(&SoundOutput, ByteToLock, BytesToWrite, &SoundBuffer);
       } else
       {
-        SoundIsValid = false;
+        SoundIsValid = 0;
       }
 
       // TODO: assert that the Region1Size/Region2Size is valid
@@ -1417,7 +1417,7 @@ int WINAPI WinMain(HINSTANCE hInstance,     // handle to an instance. Unique ID 
 #if INTERNAL
       // NOTE(casey): This is debug code
       {
-        if (GlobalSecondaryBuffer->GetCurrentPosition(&PlayCursor, &WriteCursor) == DS_OK)
+        if (GlobalSecondaryBuffer->lpVtbl->GetCurrentPosition(GlobalSecondaryBuffer, &PlayCursor, &WriteCursor) == DS_OK)
         {
           Assert(DebugTimeMarkerIndex < ArrayCount(DebugTimeMarkers));
           win32_debug_time_marker *Marker = &DebugTimeMarkers[DebugTimeMarkerIndex];
@@ -1433,7 +1433,7 @@ int WINAPI WinMain(HINSTANCE hInstance,     // handle to an instance. Unique ID 
 
       // Performance Info
 
-#if 1
+#if 0
       uint64 EndCycleCount = __rdtsc();
       int64 CyclesElapsed = EndCycleCount - LastCycleCount;
       LastCycleCount = EndCycleCount;

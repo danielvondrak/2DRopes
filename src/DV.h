@@ -12,7 +12,7 @@ typedef struct Color {
 } Color;
 
 typedef struct Particle {
-  bool pinned;
+  bool32 pinned;
 
   v2 position;
   v2 previous_position;
@@ -40,12 +40,12 @@ typedef struct Ropes {
   size_t capacity;
 } Ropes;
 
-struct game_state
+typedef struct game_state
 {
 	Ropes ROPES;
 	int32 ACTIVE_ROPE;
 	int32 PINNABLE;
-};
+}game_state;
 
 
 struct game_clocks {

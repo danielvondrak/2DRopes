@@ -23,7 +23,7 @@ mkdir %BUILD_PATH%
 echo =========== building ===========
 REM Optimization switches /O2 /Oi /fp:fast
 echo WAITING FOR PDB > %BUILD_PATH%/lock.tmp
-cl %COMPILER_OPTS% %WARNING_OPTS% %VARS% %DEBUG_OPTS% src\DV.cpp %DLL_OUTPUT_OPTS% /LD /link -incremental:no /EXPORT:GameGetSoundSamples /EXPORT:GameUpdateAndRender
+cl %COMPILER_OPTS% %WARNING_OPTS% %VARS% %DEBUG_OPTS% src\DV.c %DLL_OUTPUT_OPTS% /LD /link -incremental:no /EXPORT:GameGetSoundSamples /EXPORT:GameUpdateAndRender
 del %BUILD_PATH%\lock.tmp
-cl %COMPILER_OPTS% %WARNING_OPTS% %VARS% %DEBUG_OPTS% src\Win32App.cpp %OUTPUT_OPTS% /link %LINKER_OPTS%
+cl %COMPILER_OPTS% %WARNING_OPTS% %VARS% %DEBUG_OPTS% src\Win32App.c %OUTPUT_OPTS% /link %LINKER_OPTS%
 echo =========== done ===========

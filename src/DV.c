@@ -100,7 +100,7 @@ void UpdateRope(game_state *GameState, float deltaTime, int32 mX, int32 mY)
         velocity.Y *= DAMPING;
 
         particle->previous_position = particle->position;
-        particle->position = ((particle->position + velocity) + (particle->acceleration * (deltaTime * deltaTime)));
+        particle->position = addV2(addV2(particle->position, velocity), scaleV2(particle->acceleration, (deltaTime * deltaTime)));
         v2 z = {0, 0};
         particle->acceleration = z;
       }
@@ -186,7 +186,7 @@ internal void DrawRectangle(game_offscreen_buffer *Buffer, v2 vMin, v2 vMax, rea
   }
 }
 
-extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
+GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
 {
   Assert((&Input->Controllers[0].Terminator - &Input->Controllers[0].Buttons[0]) == (ArrayCount(Input->Controllers[0].Buttons)));
   Assert(sizeof(game_state) <= Memory->PermanentStorageSize);
@@ -195,15 +195,18 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
   game_state *GameState = (game_state *)Memory->PermanentStorage;
   if (!Memory->IsInitialized)
   {
-    GameState->ROPES = {NULL, 0, 0};
+		Ropes r = {};
+    GameState->ROPES = r;
     GameState->ACTIVE_ROPE = -1;
     GameState->PINNABLE = 0;
 
-    Memory->IsInitialized = true;
+    Memory->IsInitialized = 1;
   }
 
   // Clear Buffer
-  DrawRectangle(Buffer, v2{0, 0}, v2{(real32)Buffer->Width, (real32)Buffer->Height}, 0.25f, 0.25f, 0.25f);
+	v2 zero = {0, 0};
+	v2 max = {(real32)Buffer->Width, (real32)Buffer->Height};
+  DrawRectangle(Buffer, zero, max, 0.25f, 0.25f, 0.25f);
 
   if (Input->MouseButtons[0].EndedDown && GameState->ACTIVE_ROPE == -1)
   {
@@ -215,7 +218,7 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
       v2 previous_position = position;
 
       Color color = {(unsigned char)(RandomNumberTable[i] % 256), (unsigned char)(RandomNumberTable[i + 1] % 256), (unsigned char)(RandomNumberTable[i + 2] % 256), (unsigned char)255};
-      Particle p = {false, position, previous_position, v2{0,0}, color};
+      Particle p = {0, position, previous_position, zero, color};
 
       ROPE.PARTICLES[i] = p;
     }
@@ -233,12 +236,12 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
     {
       if (!GameState->ROPES.items[GameState->ACTIVE_ROPE].PARTICLES[0].pinned)
       {
-        GameState->ROPES.items[GameState->ACTIVE_ROPE].PARTICLES[0].pinned = true;
+        GameState->ROPES.items[GameState->ACTIVE_ROPE].PARTICLES[0].pinned = 1;
         GameState->PINNABLE = MAX_PARTICLE_COUNT;
       }
       else
       {
-        GameState->ROPES.items[GameState->ACTIVE_ROPE].PARTICLES[MAX_PARTICLE_COUNT].pinned = true;
+        GameState->ROPES.items[GameState->ACTIVE_ROPE].PARTICLES[MAX_PARTICLE_COUNT].pinned = 1;
         GameState->ACTIVE_ROPE = -1;
       }
     }
@@ -259,7 +262,7 @@ internal void GameOutputSound(game_state *GameState, game_sound_output_buffer *S
 {
   // unused;
 }
-extern "C" GAME_GET_SOUND_SAMPLES(GameGetSoundSamples)
+GAME_GET_SOUND_SAMPLES(GameGetSoundSamples)
 {
   game_state *GameState = (game_state *)Memory->PermanentStorage;
   GameOutputSound(GameState, SoundBuffer);

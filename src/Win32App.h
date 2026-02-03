@@ -1,21 +1,21 @@
 #if !defined(WIN32_H)
 
-struct win32_sound_output {
+typedef struct win32_sound_output {
   int SamplesPerSecond;
   uint32 RunningSampleIndex;
   int BytesPerSample;
   DWORD SecondaryBufferSize;
   DWORD SafetyBytes;
   
-};
+}win32_sound_output;
 
-struct win32_window_dimension
+typedef struct win32_window_dimension
 {
     int Width;
     int Height;
-};
+}win32_window_dimension;
 
-struct win32_offscreen_buffer {
+typedef struct win32_offscreen_buffer {
 
   BITMAPINFO Info; // buffer for display
   void *Memory;
@@ -23,9 +23,9 @@ struct win32_offscreen_buffer {
   int Height;
   int Pitch;
   int BytesPerPixel;
-};
+}win32_offscreen_buffer;
 
-struct win32_debug_time_marker
+typedef struct win32_debug_time_marker
 {
 	
 	DWORD OutputPlayCursor;
@@ -36,9 +36,9 @@ struct win32_debug_time_marker
 
 	DWORD FlipPlayCursor;
 	DWORD FlipWriteCursor;
-};
+}win32_debug_time_marker;
 
-struct win32_game_code {
+typedef struct win32_game_code {
   HMODULE GameCodeDLL;
   FILETIME DLLLastWriteTime;
 
@@ -48,19 +48,19 @@ struct win32_game_code {
   game_get_sound_samples *GetSoundSamples;
 
   bool32 IsValid;
-};
+} win32_game_code;
 
 #define WIN32_STATE_FILE_NAME_COUNT MAX_PATH
 
-struct win32_replay_buffer
+typedef struct win32_replay_buffer
 {
 	HANDLE FileHandle;
 	HANDLE MemoryMap;
 	char Filename[WIN32_STATE_FILE_NAME_COUNT];
 	void *MemoryBlock;
-};
+}win32_replay_buffer;
 
-struct win32_state
+typedef struct win32_state
 {
 	uint64 TotalSize;
 	void *GameMemoryBlock;
@@ -75,7 +75,7 @@ struct win32_state
 
 	char EXEFilename[WIN32_STATE_FILE_NAME_COUNT];
 	char *OnePastLastEXEFilenameSlash;
-};
+}win32_state;
 
 #define WIN32_H
 #endif
