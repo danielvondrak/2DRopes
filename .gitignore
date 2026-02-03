@@ -1,0 +1,7 @@
+build/**
+HH Files/**
+data/**
+.clang-format
+.clangd
+properties.lua
+static_check.bat
