@@ -324,7 +324,7 @@ internal win32_window_dimension Win32GetWindowDimension(HWND Window) {
 internal void
 Win32ResizeDIBSection(win32_offscreen_buffer *Buffer, int Width, int Height)
 {
-    // TODO(casey): Bulletproof this.
+    // TODO: Bulletproof this.
     // Maybe don't free first, free after, then free first if that fails.
 
     if(Buffer->Memory)
@@ -338,7 +338,7 @@ Win32ResizeDIBSection(win32_offscreen_buffer *Buffer, int Width, int Height)
     int BytesPerPixel = 4;
     Buffer->BytesPerPixel = BytesPerPixel;
 
-    // NOTE(casey): When the biHeight field is negative, this is the clue to
+    // NOTE: When the biHeight field is negative, this is the clue to
     // Windows to treat this bitmap as top-down, not bottom-up, meaning that
     // the first three bytes of the image are the color for the top left pixel
     // in the bitmap, not the bottom left!
@@ -349,14 +349,14 @@ Win32ResizeDIBSection(win32_offscreen_buffer *Buffer, int Width, int Height)
     Buffer->Info.bmiHeader.biBitCount = 32;
     Buffer->Info.bmiHeader.biCompression = BI_RGB;
 
-    // NOTE(casey): Thank you to Chris Hecker of Spy Party fame
+    // NOTE: Thank you to Chris Hecker of Spy Party fame
     // for clarifying the deal with StretchDIBits and BitBlt!
     // No more DC for us.
     int BitmapMemorySize = (Buffer->Width*Buffer->Height)*BytesPerPixel;
     Buffer->Memory = VirtualAlloc(0, BitmapMemorySize, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE);
     Buffer->Pitch = Width*BytesPerPixel;
 
-    // TODO(casey): Probably clear this to black
+    // TODO: Probably clear this to black
 }
 
 internal void
@@ -385,7 +385,7 @@ Win32DisplayBufferInWindow(win32_offscreen_buffer *Buffer,
         PatBlt(DeviceContext, 0, 0, OffsetX, WindowHeight, BLACKNESS);
         PatBlt(DeviceContext, OffsetX + Buffer->Width, 0, WindowWidth, WindowHeight, BLACKNESS);
     
-        // NOTE(casey): For prototyping purposes, we're going to always blit
+        // NOTE: For prototyping purposes, we're going to always blit
         // 1-to-1 pixels to make sure we don't introduce artifacts with
         // stretching while we are learning to code the renderer!
         StretchDIBits(DeviceContext,
@@ -1136,7 +1136,7 @@ int WINAPI WinMain(HINSTANCE hInstance,     // handle to an instance. Unique ID 
           NewController->IsConnected = 1;
 		  NewController->IsAnalog = OldController->IsAnalog;
 
-          // NOTE(casey): This controller is plugged in
+          // NOTE: This controller is plugged in
           // TODO: See if ControllerState.dwPacketNumber increments too rapidly
           XINPUT_GAMEPAD *Pad = &ControllerState.Gamepad;
 
@@ -1191,7 +1191,7 @@ int WINAPI WinMain(HINSTANCE hInstance,     // handle to an instance. Unique ID 
           Win32ProcessXInputDigitalButton(Pad->wButtons, &OldController->Back, XINPUT_GAMEPAD_BACK, &NewController->Back);
         } else
         {
-          // NOTE(casey): The controller is not available
+          // NOTE: The controller is not available
           NewController->IsConnected = 0;
         }
       }
@@ -1233,7 +1233,7 @@ int WINAPI WinMain(HINSTANCE hInstance,     // handle to an instance. Unique ID 
       DWORD WriteCursor;
       if (GlobalSecondaryBuffer->lpVtbl->GetCurrentPosition(GlobalSecondaryBuffer, &PlayCursor, &WriteCursor) == DS_OK)
       {
-        /* NOTE(casey):
+        /* NOTE:
 
            Here is how sound output computation works.
 
@@ -1374,8 +1374,8 @@ int WINAPI WinMain(HINSTANCE hInstance,     // handle to an instance. Unique ID 
         }
       } else
       {
-        // TODO(casey): MISSED FRAME RATE!
-        // TODO(casey): Logging
+        // TODO: MISSED FRAME RATE!
+        // TODO: Logging
       }
 
       LARGE_INTEGER EndCounter = Win32GetWallClock();
@@ -1394,7 +1394,7 @@ int WINAPI WinMain(HINSTANCE hInstance,     // handle to an instance. Unique ID 
       FlipWallClock = Win32GetWallClock();
 
 #if INTERNAL
-      // NOTE(casey): This is debug code
+      // NOTE: This is debug code
       {
         if (GlobalSecondaryBuffer->lpVtbl->GetCurrentPosition(GlobalSecondaryBuffer, &PlayCursor, &WriteCursor) == DS_OK)
         {
