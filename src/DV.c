@@ -1,20 +1,14 @@
 #include "DV.h"
 #include "DV_Random.h"
 
-#define append_rope(ropes, rope)                                                                                                                                                                       \
-  do                                                                                                                                                                                                   \
-  {                                                                                                                                                                                                    \
-    if (ropes.count >= ropes.capacity)                                                                                                                                                                 \
-    {                                                                                                                                                                                                  \
-      if (ropes.capacity == 0)                                                                                                                                                                         \
-        ropes.capacity = 1024;                                                                                                                                                                         \
-      else                                                                                                                                                                                             \
-        ropes.capacity *= 2;                                                                                                                                                                           \
-      ropes.items = (Rope *)realloc(ropes.items, ropes.capacity * sizeof(*ropes.items));                                                                                                               \
-    }                                                                                                                                                                                                  \
-    ropes.items[ropes.count++] = rope;                                                                                                                                                                 \
-  } while (0)
+internal void append_rope(Ropes *ropes, Rope rope)
+{
+	if(ropes->count < ropes->capacity)
+	{
+		ropes->items[ropes->count++] = rope;
+	}
 
+}
 internal void DrawPoint(game_offscreen_buffer *Buffer, int32 x, int32 y, uint32 Color)
 {
   if (x >= 0 && x < Buffer->Width && y > 0 && y < Buffer->Height)
@@ -196,6 +190,8 @@ GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
   if (!Memory->IsInitialized)
   {
 		Ropes r = {};
+		r.capacity = MAX_ROPE_COUNT;
+		r.count = 0;
     GameState->ROPES = r;
     GameState->ACTIVE_ROPE = -1;
     GameState->PINNABLE = 0;
@@ -224,7 +220,7 @@ GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
     }
 
 		//TODO: cap the rope
-    append_rope(GameState->ROPES, ROPE);
+    append_rope(&GameState->ROPES, ROPE);
 
     GameState->ACTIVE_ROPE = (int)(GameState->ROPES.count - 1);
     GameState->PINNABLE = 0;

@@ -1,24 +1,3 @@
-/*
- * NOTE: THINGS TO LOOK UP
- *  -> UNICODE COMPILATION
- *	-> MEMORY ALLOCATION METHODOLOGY
- *
- * TODO:
- * 	-> Saved game locations
- * 	-> Getting a handle to our own executable file
- * 	-> Asset loading path
- * 	-> Threading
- * 	-> Raw Input (support for multiple keyboards)
- * 	-> ClipCursor (for multimonitor support)
- * 	-> Fullscreen support
- * 	-> WM_SETCURSOR (cursor control visibility)
- * 	-> Blit speed improvements
- * 	-> Hardware acceleration (OpenGL or Direct3D)
- * 	-> Disconnect/Reconnect GamePad
- *
- * TODO: BUGS
- * -> 144hz refresh rate causes audio scratching.
- * */
 #include "DV_Platform.h"
 
 #include <windows.h>

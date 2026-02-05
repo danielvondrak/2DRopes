@@ -26,6 +26,7 @@ typedef struct Particle {
 #define MAX_PARTICLE_DISTANCE 20
 
 #define MAX_CONSTRAINT_ITERATION 5
+#define MAX_ROPE_COUNT 1024
 
 #define GRAVITY 980.0
 #define DAMPING 0.98
@@ -35,7 +36,7 @@ typedef struct Rope {
 } Rope;
 
 typedef struct Ropes {
-  Rope *items;
+  Rope items[MAX_ROPE_COUNT];
   size_t count;
   size_t capacity;
 } Ropes;

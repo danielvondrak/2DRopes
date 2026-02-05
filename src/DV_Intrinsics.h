@@ -4,106 +4,25 @@
 #endif
 //
 // TODO: Convert all of these to platform-efficient versions
-// and remove math.h
 //
-
-#include "math.h"
+#include <math.h>
 
 inline real32 SquareRoot(real32 Real32)
 {
-	real32 Result = sqrtf(Real32);
-	return Result;
-}
-inline uint32 RotateLeft(uint32 Value, int32 Amount)
-{
-	uint32 Result = _rotl(Value, Amount);
-	return Result;
-}
-
-inline uint32 RotateRight(uint32 Value, int32 Amount)
-{
-	uint32 Result = _rotr(Value, Amount);
-	return Result;
-}
-inline real32 Abs(real32 Real32)
-{
-	real32 Result = (real32)fabs(Real32);
-	return Result;
-}
-
-inline int32
-RoundReal32ToInt32(real32 Real32)
-{
-    int32 Result = (int32)roundf(Real32);
+    real32 Result = _mm_cvtss_f32(_mm_sqrt_ss(_mm_set_ss(Real32)));
     return(Result);
 }
 
-inline uint32
-RoundReal32ToUInt32(real32 Real32)
+inline int32 RoundReal32ToInt32(real32 Real32)
 {
-    uint32 Result = (uint32)roundf(Real32);
+    int32 Result = _mm_cvtss_si32(_mm_set_ss(Real32));
     return(Result);
 }
 
-inline int32 
-FloorReal32ToInt32(real32 Real32)
+inline uint32 RoundReal32ToUInt32(real32 Real32)
 {
-    int32 Result = (int32)floorf(Real32);
+    uint32 Result = (uint32)_mm_cvtss_si32(_mm_set_ss(Real32));
     return(Result);
-}
-
-inline int32
-TruncateReal32ToInt32(real32 Real32)
-{
-    int32 Result = (int32)Real32;
-    return(Result);
-}
-
-inline real32
-Sin(real32 Angle)
-{
-    real32 Result = sinf(Angle);
-    return(Result);
-}
-
-inline real32
-Cos(real32 Angle)
-{
-    real32 Result = cosf(Angle);
-    return(Result);
-}
-
-inline real32
-ATan2(real32 Y, real32 X)
-{
-    real32 Result = atan2f(Y, X);
-    return(Result);
-}
-
-typedef struct bit_scan_result
-{
-	bool32 Found;
-	uint32 Index;
-}bit_scan_result;
-
-inline bit_scan_result FindLeastSignificantBit(uint32 Value)
-{
-	bit_scan_result Result = {};
-
-#if COMPILER_MSVC
-	Result.Found = _BitScanForward((unsigned long *)&Result.Index, Value);
-#else
-	for(uint32 Test = 0; Test < 32; ++Test)
-	{
-		if(Value & (1 << Test))
-		{
-			Result.Found = true;
-			Result.Index = Test;
-			break;
-		}
-	}
-#endif
-	return Result;
 }
 
 #define DV_INTRINSICS_H
